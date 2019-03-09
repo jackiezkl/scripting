@@ -33,6 +33,9 @@ ID=\$(docker ps | sed -n '2p' | cut -c 1-3)
 docker exec -it \$ID /bin/bash -c 'sed -i s/"allow_url_include = Off"/"allow_url_include = On"/ /etc/php/7.0/apache2/php.ini'
 docker exec -it \$ID /bin/bash -c 'service apache2 start' 
 
+printf "${GRN}http://172.17.0.2${END}"
+printf "    Username is:  ${YEL}admin${END}\n"
+printf "    Password is:  ${YEL}password${END}\n"
 unset ID
 EOF
 
@@ -68,5 +71,3 @@ printf "    run ${GRN}killdvwa${END} to stop.\n\n"
 printf "Files in the current folder:\n"
 
 ls -al
-
-
