@@ -67,7 +67,8 @@ printf "    Password is:  ${YEL}password${END}\n"
 printf "Make sure you click the ${YEL}Create/Reset Databse${END} button before use.\n"
 printf "Two extra files were created for you: \n"
 printf "    run ${GRN}startdvwa${END} to start.\n"
-printf "    run ${GRN}killdvwa${END} to stop.\n\n"
+printf "    run ${GRN}killdvwa${END}  to stop.\n\n"
 printf "Files in the current folder:\n"
 
-ls -al
+ls -l
+rm dockini
