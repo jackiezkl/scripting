@@ -25,3 +25,15 @@ ID=$(docker ps | sed -n '2p' | cut -c 1-3)
 docker exec -it $ID /bin/bash -c 'sed -i s/"allow_url_include = Off"/"allow_url_include = On"/ /etc/php/7.0/apache2/php.ini'
 docker exec -it $ID /bin/bash -c 'service apache2 start' 
 
+ID=""
+
+cat << EOF > enableurl
+#!/bin/bash
+
+ID=$(docker ps | sed -n '2p' | cut -c 1-3)
+
+docker exec -it $ID /bin/bash -c 'sed -i s/"allow_url_include = Off"/"allow_url_include = On"/ /etc/php/7.0/apache2/php.ini'
+docker exec -it $ID /bin/bash -c 'service apache2 start' 
+
+ID=""
+EOF
