@@ -46,10 +46,11 @@ docker exec -it $ID /bin/bash -c 'sed -i s/"allow_url_include = Off"/"allow_url_
 docker exec -it $ID /bin/bash -c 'service apache2 start' 
 
 unset ID
-printf "\n\nYou can practice by heading to ${GRN}172.17.0.2${END} now.\n"
+printf "\n\nYou can practice by heading to ${GRN}http://172.17.0.2${END} now.\n"
 printf "User name is: ${YEL}admin${END}\n"
-printf "Password is: ${YEL}password${END}"
-printf "Make sure you click the ${YEL}Create\/Reset Databse${END} button before use."
+printf "Password is: ${YEL}password${END}\n"
+printf "Make sure you click the ${YEL}Create\/Reset Databse${END} button before use.\n"
+printf "Two extra files were created for you: run ${GRN}startdvwa${END} to start; run ${GRN}killdvwa${END} to stop.\n\n"
 
 
 
