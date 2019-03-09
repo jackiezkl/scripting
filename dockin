@@ -37,9 +37,9 @@ docker exec -it \$ID /bin/bash -c 'sed -i s/"allow_url_include = Off"/"allow_url
 docker exec -it \$ID /bin/bash -c 'service apache2 start' 
 
 clear
-printf "${GRN}http://172.17.0.2${END}\n"
-printf "    Username is:  ${YEL}admin${END}\n"
-printf "    Password is:  ${YEL}password${END}\n"
+printf "Link to page:${GRN}http://172.17.0.2${END}\n"
+printf "    Username:  ${YEL}admin${END}\n"
+printf "    Password:  ${YEL}password${END}\n"
 unset ID
 EOF
 
