@@ -1,5 +1,5 @@
 #!/bin/bash
-#This is a installation file foe Kali linux. It will set the "allow_url_include" as enable
+#This is a installation file foe Kali linux. It will set the allow_url_include as enable
 #It will install DVWA and delete itself.
 #It also create two additional files, one for start DVWA, one for kill DVWA.
 
