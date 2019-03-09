@@ -12,7 +12,7 @@ echo 'deb [arch=amd64] https://download.docker.com/linux/debian buster stable' >
 apt-get update
 
 clear
-printf "${YEL}Docker is installing... \nDepending on your Internet, this may take a while.\n\n${END}"
+printf "${YEL}Docker is installing... \nDepending on your Internet speed, this may take a while.\n\n${END}"
 
 echo y | apt-get install docker-ce
 service docker start
@@ -61,7 +61,7 @@ docker exec -it $ID /bin/bash -c 'service apache2 start'
 unset ID
 clear
 
-printf "\n\nYou can practice by heading to ${GRN}http://172.17.0.2${END} now.\n"
+printf "You can practice by heading to ${GRN}http://172.17.0.2${END} now.\n"
 printf "    Username is:  ${YEL}admin${END}\n"
 printf "    Password is:  ${YEL}password${END}\n"
 printf "Make sure you click the ${YEL}Create/Reset Databse${END} button before use.\n"
@@ -69,6 +69,6 @@ printf "Two extra files were created for you: \n"
 printf "    run ${GRN}startdvwa${END} to start.\n"
 printf "    run ${GRN}killdvwa${END}  to stop.\n\n"
 printf "Files in the current folder:\n"
-
+rm dockin
 ls -l
-rm dockini
+
