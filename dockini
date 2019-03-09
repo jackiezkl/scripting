@@ -39,10 +39,9 @@ EOF
 cat << EOF > killdvwa
 #!/bin/bash
 
-docker run --rm -it -d -p 80:80 vulnerables/web-dvwa
 ID=\$(docker ps | sed -n '2p' | cut -c 1-3)
 
-docker kill $ID
+docker kill \$ID
 unset ID
 EOF
 
@@ -59,9 +58,11 @@ docker exec -it $ID /bin/bash -c 'service apache2 start'
 unset ID
 printf "\n\nYou can practice by heading to ${GRN}http://172.17.0.2${END} now.\n"
 printf "User name is: ${YEL}admin${END}\n"
-printf "Password is: ${YEL}password${END}\n"
-printf "Make sure you click the ${YEL}Create\/Reset Databse${END} button before use.\n"
-printf "Two extra files were created for you: run ${GRN}startdvwa${END} to start; run ${GRN}killdvwa${END} to stop.\n\n"
+printf "Password is:  ${YEL}password${END}\n"
+printf "Make sure you click the ${YEL}Create/Reset Databse${END} button before use.\n"
+printf "Two extra files were created for you: \n"
+printf "    run ${GRN}startdvwa${END} to start.\n"
+printf "    run ${GRN}killdvwa${END} to stop.\n\n"
 
 
 
