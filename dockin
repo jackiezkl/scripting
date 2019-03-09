@@ -42,4 +42,5 @@ docker exec -it \$ID /bin/bash -c 'sed -i s/"allow_url_include = Off"/"allow_url
 docker exec -it \$ID /bin/bash -c 'service apache2 start' 
 
 unset ID
+chmod 755 enableurl
 EOF
