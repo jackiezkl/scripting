@@ -75,8 +75,9 @@ docker exec -it $ID /bin/bash -c 'service apache2 start'
 
 unset ID
 clear
-
-printf "You can practice by heading to ${GRN}http://172.17.0.2${END} now.\n"
+IP=$(ifconfig eth0 | grep "inet addr" | cut -d: -f2 | cut -d" " -f1)
+printf "You can practice by heading to ${GRN}http://$IP${END} now.\n"
+unset IP
 printf "    Username is:  ${YEL}admin${END}\n"
 printf "    Password is:  ${YEL}password${END}\n"
 printf "Make sure you click the ${YEL}Create/Reset Databse${END} button before use.\n"
